@@ -1,13 +1,28 @@
 <!doctype html>
-<head>
-  <meta charset="utf-8">
-  <title>SlowTube</title>
+<html>
 
-  <meta name="theme-color" content="#fafafa">
+<head>
+  <title>SlowTube</title>
+  <style>
+    video {
+      width: 640px;
+      height: 360px;
+    }
+  </style>
 </head>
 
 <body>
-  <p>Hello world!</p>
+  <div>
+    <video id="videoPlayer" controls></video>
+  </div>
+  <script src="dash.all.min.js"></script>
+  <script>
+    (function () {
+      var url = "content/out/test.mpd";
+      var player = dashjs.MediaPlayer().create();
+      player.initialize(document.querySelector("#videoPlayer"), url, true);
+    })();
+  </script>
 </body>
 
 </html>
