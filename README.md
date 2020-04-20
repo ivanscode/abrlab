@@ -36,7 +36,30 @@ Dash.js' minified file is included
 Additionally, the webiste uses Bootstrap for styling using its CDN
 
 ### Quirks
-The converter is setup to be used on Windows, but if you are running Linux, the only necessary change in the converter script should be the file output format as Windows uses `dir\file` instead of `dir/file`
+The converter is setup to be used on Windows, but if you are running Linux, the only necessary change in the converter script should be the file output format as Windows uses `dir\file` instead of `dir/file`.
+
+If you want to wait for the fixed script for Linux, please use the following commands to encode mp4 files to DASH using ffmpeg and mp4box:
+
+Some metadata must be extracted from the video by simply using:
+```console
+ffmpeg -i [input].mp4
+```
+
+Knowing the above info, execute:
+```console
+ffmpeg -i [input].mp4 -c:a copy -vn -y [output].mp4
+ffmpeg -i [input].mp4 -an -c:v libx264 -x264opts keyint=[FPS]:min-keyint=[FPS]:no-scenecut -b:v [bitrate] -maxrate [bitrate] -bufsize [bitrate/2] -vf scale=[width]:[height] -y [output].mp4
+```
+**Note**: You will have to run that last line for every bitrate and resolution that you need for DASH
+
+
+Finally, use mp4box to encode to dash:
+```console
+mp4box -dash 1000 -rap -frag-rap -profile onDemand -out [output].mpd [input1].mp4 [input2].mp4 [inputn].mp4 [input-AUDIO].mp4
+```
+
+Additionally, the converter can only convert "standard" formats of videos correctly. It looks for 16:9 standard resultions defined in the `resolutions` array, so if the video's original resolution
+does not match any in that array, the video will be encoded up to 1080p even if its base resolution is 240p.
 
 ## Web UI
 ### Setup

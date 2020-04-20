@@ -97,13 +97,25 @@ class Cmd:
             return MP4BIN + Cmd.DASHENC + self.output + self.inputs
 
 
-
+'''
+Extract audio from video and save as a separate file
+'''
 def extractAudio(video):
     cmd = Cmd(video, Cmd.AUDIO)
     cmd.setVerbose(False)
     sp.Popen(str(cmd), stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True).communicate()
     print('Extracted audio...')
 
+
+'''
+Encode into most common resolutions
+
+Encoding is done from 240p up to the resolution of the video
+
+NOTE: This method asssumes the video is in a standard resolution for 16:9 videos
+    meaning if the video is YYYYx721, the method should still work but the video will
+    be encoded up to 1080p
+'''
 def multiEncode(video):
     for i, r in enumerate(resolutions):
         if int(r.split('x')[1]) > int(video.resolution[1]):
@@ -119,6 +131,10 @@ def multiEncode(video):
         p.communicate()
         print('Encoded for {}'.format(r))
 
+
+'''
+Convert series of bitrates to DASH
+'''
 def toDash(video):
     cmd = Cmd(video, Cmd.DASH)
     inputs = ''
