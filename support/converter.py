@@ -3,6 +3,7 @@ import sys, os
 import re
 
 FFBIN = 'ffmpeg'
+MP4BIN = 'mp4box'
 resolutions = ['426x240', '640x360', '854x480', '1280x720', '1920x1080']
 bitrates = ['400k', '700k', '1250k', '2500k', '4500k']
 buffSizes = ['200k', '350k', '625k', '1250k', '2250k']
@@ -25,8 +26,10 @@ class Video:
 class Cmd:
     AUDIO = 'audio'
     ENCODE = 'encode'
+    DASH = 'dash'
     AUDIOCOPY = ' -c:a copy -vn'
     CODECS = ' -an -c:v libx264 -x264opts'
+    DASHENC = ' -dash 1000 -rap -frag-rap -profile onDemand -out'
 
     def __init__(self, video, action):
         self.action = action
@@ -55,6 +58,9 @@ class Cmd:
             self.verbose = ''
         else:
             self.verbose = ' -loglevel error'
+
+    def setInputs(self, fin):
+        self.inputs = fin
     
     def setOutput(self, path):
         if self.action == Cmd.AUDIO:
@@ -73,12 +79,22 @@ class Cmd:
                     self.output = ' -y {}-{}'.format(self.resolution.split(':')[1], self.name)
                 else:
                     self.output = ' -y {}\\{}-{}'.format(path, self.resolution.split(':')[1], self.name)
+        if self.action == Cmd.DASH:
+            if path == None:
+                self.output = ' {}\\{}.mpd'.format(self.path, self.name.split('.')[0])
+            else:
+                if path == '':
+                    self.output = ' {}.mpd'.format(self.name.split('.')[0])
+                else:
+                    self.output = ' {}\\{}.mpd'.format(path, self.name.split('.')[0])
             
     def __str__(self):
         if self.action == Cmd.AUDIO:
             return FFBIN + self.verbose + self.input + Cmd.AUDIOCOPY + self.output
         if self.action == Cmd.ENCODE:
             return FFBIN + self.verbose + self.input + Cmd.CODECS + self.framerate + self.bitrate + self.buffSize + self.resolution + self.output
+        if self.action == Cmd.DASH:
+            return MP4BIN + Cmd.DASHENC + self.output + self.inputs
 
 
 
@@ -102,5 +118,17 @@ def multiEncode(video):
         p = sp.Popen(str(cmd), stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
         p.communicate()
         print('Encoded for {}'.format(r))
-        
+
+def toDash(video):
+    cmd = Cmd(video, Cmd.DASH)
+    inputs = ''
+    for r in resolutions:
+        if int(r.split('x')[1]) > int(video.resolution[1]):
+            break
+        inputs += ' {}\\{}-{}'.format(video.path, r.split('x')[1], video.name)
+    inputs += ' {}\\audio-{}'.format(video.path, video.name)
+    cmd.setInputs(inputs)
+    p = sp.Popen(str(cmd), stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+    p.communicate()
+    print('MPD generated')
         

@@ -1,3 +1,4 @@
 support/ffmpeg.exe
 support/__*
 inputs/
+server/content/
