@@ -1,6 +1,5 @@
-
-
 function init(rule) {
+    //Video to use
     var video,
         player,
         url = "content/republique2.mpd";
@@ -8,18 +7,29 @@ function init(rule) {
     video = document.querySelector("video");
     player = dashjs.MediaPlayer().create();
 
+    //Switching between ABR rules
     if(rule == 'default'){
         setDefaultRules(player);
     }else{
         setCustomRule(player, 'LowestBitrateRule', LowestBitrateRule);
     }
 
+    //Initialize after. Bugged otherwise
     player.initialize(video, url, true);
+
+    //On end
     player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
         clearInterval(eventPoller);
         clearInterval(bitrateCalculator);
     });
 
+    //On .reset() call. Used to switch between ABR rules on the fly
+    player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, function(){
+        clearInterval(eventPoller);
+        clearInterval(bitrateCalculator);
+    });
+
+    //Collect and display information every .5 s
     var eventPoller = setInterval(function () {
         var streamInfo = player.getActiveStream().getStreamInfo();
         var dashMetrics = player.getDashMetrics();
@@ -33,7 +43,7 @@ function init(rule) {
             document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
             document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
         }
-    }, 1000);
+    }, 500);
 
     if (video.webkitVideoDecodedByteCount !== undefined) {
         var lastDecodedByteCount = 0;
@@ -42,15 +52,10 @@ function init(rule) {
             var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
             document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
             lastDecodedByteCount = video.webkitVideoDecodedByteCount;
-        }, bitrateInterval * 1000);
+        }, bitrateInterval * 500);
     } else {
         document.getElementById('chrome-only').style.display = "none";
     }
-
-    player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, function(){
-        clearInterval(eventPoller);
-        clearInterval(bitrateCalculator);
-    });
 
     return player
 }
@@ -65,7 +70,6 @@ function setDefaultRules(player){
         }
     });
 
-    console.log('deafaulted');
     player.removeAllABRCustomRule();
     document.getElementById('currentAlgorithm').innerText = 'abrDynamic';
 }
