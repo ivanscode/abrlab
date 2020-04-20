@@ -5,23 +5,83 @@
   <title>SlowTube</title>
   <style>
     video {
-      width: 640px;
-      height: 360px;
+      width: 1280px;
+      height: 720px;
     }
   </style>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 
 <body>
-  <div>
-    <video id="videoPlayer" controls></video>
+
+  <div class="row">
+    <div class="col-sm-3" style="padding-left: 2rem; padding-top: 1rem;">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Information</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Recorded and calculated metrics</h6>
+          <div>Buffer: <span id="bufferLevel"></span></div>
+          <div>Reported Bitrate: <span id="reportedBitrate"></span></div>
+          <div>Calculated Bitrate: <span id="calculatedBitrate"></span></div>
+          <h6 class="card-subtitle mb-2 mt-2 text-muted">ABR settings</h6>
+          <div>Current Algorithm: <span id="currentAlgorithm"></span></div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-sm-6" style="text-align: center;">
+      <video id="videoPlayer" controls></video>
+    </div>
+
+
+    <div class="col-sm-3" style="padding-right: 2rem; padding-top: 1rem;">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Functions</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Set ABR rules here</h6>
+          <div style="margin-bottom: 1rem;">
+            <button id="setDefaultBtn" type="button" class="btn btn-secondary btn-block">Deafult ABR</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button id="setLowestBtn" type="button" class="btn btn-secondary btn-block">LowestBitrate</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button type="button" class="btn btn-secondary btn-block">Something Else</button>
+          </div>
+          <h6 class="card-subtitle mb-2 text-muted">Additional Tweaks</h6>
+          <div>
+            <label for="bufferSize">Buffer Size (s)</label>
+            <input type="number" class="form-control" id="bufferSize">
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
   </div>
+
+
   <script src="dash.all.min.js"></script>
-  <script>
-    (function () {
-      var url = "content/out/test.mpd";
-      var player = dashjs.MediaPlayer().create();
-      player.initialize(document.querySelector("#videoPlayer"), url, true);
-    })();
+  <script src="LowestBitrateRule.js"></script>
+  <script src="main.js"></script>
+  <script> 
+    var player = init('default');
+
+    const dbtn = document.getElementById('setDefaultBtn');
+
+    dbtn.addEventListener('click', event => {
+      player.reset();
+      player = init('default');
+    });
+
+    const lbtn = document.getElementById('setLowestBtn');
+
+    lbtn.addEventListener('click', event => {
+      player.reset();
+      player = init('lowest');
+    });
   </script>
 </body>
 
