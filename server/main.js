@@ -1,3 +1,5 @@
+let zeroTime = new Date().getTime();
+
 function init(rule) {
     //Video to use
     var video,
@@ -8,9 +10,9 @@ function init(rule) {
     player = dashjs.MediaPlayer().create();
 
     //Switching between ABR rules
-    if(rule == 'default'){
+    if (rule == 'default') {
         setDefaultRules(player);
-    }else{
+    } else {
         setCustomRule(player, 'LowestBitrateRule', LowestBitrateRule);
     }
 
@@ -24,7 +26,7 @@ function init(rule) {
     });
 
     //On .reset() call. Used to switch between ABR rules on the fly
-    player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, function(){
+    player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, function () {
         clearInterval(eventPoller);
         clearInterval(bitrateCalculator);
     });
@@ -57,11 +59,62 @@ function init(rule) {
         document.getElementById('chrome-only').style.display = "none";
     }
 
-    return player
+    return player;
 }
-   
 
-function setDefaultRules(player){
+function addData(chart, data) {
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+    });
+    chart.update();
+}
+
+function initChart() {
+    let ctx = document.getElementById('infoChart');
+    let infoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Quality',
+                steppedLine: true,
+                borderColor: 'rgba(0,0,220,1)',
+                pointBackgroundColor: 'rgba(0,0,220,1)',
+                data: [{x: 0, y: 0}]
+            }]
+        }
+    });
+    infoChart.options = {
+        responsive: true,
+        title: {
+            display: true,
+            text: 'Quality'
+        },
+        scales: {
+            xAxes: [{
+                display: true,
+                type: 'linear',
+                position: 'bottom',
+                showLine: true,
+                ticks: {
+                    suggestedMin: 0,
+                    suggestedMax: 5
+                }
+            }],
+            yAxes: [{
+                display: true,
+                ticks: {
+                    suggestedMin: 0,
+                    suggestedMax: 5
+                }
+            }]
+        }
+    };
+    infoChart.update();
+
+    return infoChart;
+}
+
+function setDefaultRules(player) {
     player.updateSettings({
         'streaming': {
             'abr': {
@@ -74,7 +127,7 @@ function setDefaultRules(player){
     document.getElementById('currentAlgorithm').innerText = 'abrDynamic';
 }
 
-function setCustomRule(player, name, src){
+function setCustomRule(player, name, src) {
     player.updateSettings({
         'streaming': {
             'abr': {
@@ -87,3 +140,114 @@ function setCustomRule(player, name, src){
     document.getElementById('currentAlgorithm').innerText = name;
     player.addABRCustomRule('qualitySwitchRules', name, src);
 }
+
+function refresh(){
+    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function () {
+        let diff = (new Date().getTime() - zeroTime) / 1000;
+        addData(infoChart, { x: diff, y: player.getQualityFor('video')});
+    });
+}
+
+var player = init('default');
+let infoChart = initChart();
+refresh();
+
+const dbtn = document.getElementById('setDefaultBtn');
+const lbtn = document.getElementById('setLowestBtn');
+const defaultPlaybackBtn = document.getElementById('setDefaultPlaybackBtn');
+
+const initBufferSet = document.getElementById('initBufferSet');
+const stableBufferSet = document.getElementById('stableBufferSet');
+const minBitrateSet = document.getElementById('minBitrateSet');
+const maxBitrateSet = document.getElementById('maxBitrateSet');
+
+const initBufferL = document.getElementById('initBuffer');
+const stableBufferL = document.getElementById('stableBuffer');
+const minBitrateL = document.getElementById('minBitrate');
+const maxBitrateL = document.getElementById('maxBitrate');
+
+dbtn.addEventListener('click', event => {
+    player.reset();
+    player = init('default');
+    refresh();
+});
+
+lbtn.addEventListener('click', event => {
+    player.reset();
+    player = init('lowest');
+    refresh();
+});
+
+defaultPlaybackBtn.addEventListener('click', event => {
+    player.updateSettings({
+        'streaming': {
+            'stableBufferTime': 12,
+            'bufferTimeAtTopQuality': 30,
+            'abr': {
+                'minBitrate': {
+                    'video': -1
+                },
+                'maxBitrate': {
+                    'video': -1
+                }
+            }
+        }
+    });
+    initBufferL.innerText = '12 s';
+    stableBufferL.innerText = '30 s';
+    minBitrateL.innerText = '-1 Kbps';
+    maxBitrateL.innerText = '-1 Kbps';
+
+    initBufferSet.value = 12;
+    stableBufferSet.value = 30;
+    minBitrateSet.value = -1;
+    maxBitrateSet.value = -1;
+});
+
+initBufferSet.addEventListener('change', event => {
+    let initBuffer = parseInt(initBufferSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'stableBufferTime': initBuffer
+        }
+    });
+    initBufferL.innerText = initBuffer + ' s';
+});
+
+stableBufferSet.addEventListener('change', event => {
+    let stableBuffer = parseInt(stableBufferSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'bufferTimeAtTopQuality': stableBuffer
+        }
+    });
+    stableBufferL.innerText = stableBuffer + ' s';
+});
+
+minBitrateSet.addEventListener('change', event => {
+    let minBitrate = parseInt(minBitrateSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'abr': {
+                'minBitrate': {
+                    'video': minBitrate
+                }
+            }
+        }
+    });
+    minBitrateL.innerText = minBitrate + ' Kbps';
+});
+
+maxBitrateSet.addEventListener('change', event => {
+    let maxBitrate = parseInt(maxBitrateSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'abr': {
+                'maxBitrate': {
+                    'video': maxBitrate
+                }
+            }
+        }
+    });
+    maxBitrateL.innerText = maxBitrate + ' Kbps';
+});

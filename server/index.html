@@ -9,8 +9,13 @@
       height: 720px;
     }
   </style>
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
 </head>
 
 <body>
@@ -33,18 +38,42 @@
           <div>Maximum Bitrate: <span id="maxBitrate">-1 Kbps</span></div>
         </div>
       </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Buffer</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Settings</h6>
+          <div>
+            <label for="initBufferSet">Standard Buffer Size (s)</label>
+            <input type="number" class="form-control" id="initBufferSet" value="12">
+          </div>
+          <div>
+            <label for="stableBufferSet">Buffer Size at Max Quality (s)</label>
+            <input type="number" class="form-control" id="stableBufferSet" value="30">
+          </div>
+          <div>
+            <label for="stableBufferSet">Buffer Pruning Interval (s)</label>
+            <input type="number" class="form-control" id="bufferPruneSet" value="10">
+          </div>
+          <div>
+            <label for="stableBufferSet">Max Buffer Size (s) (Ahead of the current timestamp)</label>
+            <input type="number" class="form-control" id="bufferAheadSet" value="80">
+          </div>
+        </div>
+      </div>
     </div>
 
 
     <div class="col-sm-6" style="text-align: center;">
       <video id="videoPlayer" controls></video>
+
+      <canvas id="infoChart" width="100%" height="40vh"></canvas>   
     </div>
 
 
     <div class="col-sm-3" style="padding-right: 2rem; padding-top: 1rem;">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Functions</h5>
+          <h5 class="card-title">ABR</h5>
           <h6 class="card-subtitle mb-2 text-muted">Set ABR rules here</h6>
           <div style="margin-bottom: 1rem;">
             <button id="setDefaultBtn" type="button" class="btn btn-secondary btn-block">Deafult ABR</button>
@@ -57,7 +86,8 @@
           </div>
           <h6 class="card-subtitle mb-2 text-muted">Additional Tweaks</h6>
           <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle btn-block disabled" type="button" id="windowSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-secondary dropdown-toggle btn-block disabled" type="button" id="windowSelect"
+              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Player Size (Can be set in main.js for now)
             </button>
             <div class="dropdown-menu" aria-labelledby="windowSelect">
@@ -66,14 +96,13 @@
               <a class="dropdown-item">640x360</a>
             </div>
           </div>
-          <div>
-            <label for="initBufferSet">Initial Buffer Size (s)</label>
-            <input type="number" class="form-control" id="initBufferSet" value="12">
-          </div>
-          <div>
-            <label for="stableBufferSet">Stable Buffer Size (s)</label>
-            <input type="number" class="form-control" id="stableBufferSet" value="30">
-          </div>
+
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Additional Settings</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Bitrate Limiters</h6>
           <div>
             <label for="minBitrateSet">Minimum Bitrate (Kbps)</label>
             <input type="number" class="form-control" id="minBitrateSet" value="-1">
@@ -85,10 +114,24 @@
           <div style="margin-top: 1rem; margin-bottom: 2rem;">
             <button id="setDefaultPlaybackBtn" type="button" class="btn btn-secondary btn-block">Default Playback Settings</button>
           </div>
-          
         </div>
       </div>
-      
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Graphing</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Modes</h6>
+          <div style="margin-bottom: 1rem;">
+            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -96,108 +139,7 @@
   <script src="dash.all.min.js"></script>
   <script src="LowestBitrateRule.js"></script>
   <script src="main.js"></script>
-  <script> 
-    var player = init('default');
 
-    const dbtn = document.getElementById('setDefaultBtn');
-    const lbtn = document.getElementById('setLowestBtn');
-    const defaultPlaybackBtn = document.getElementById('setDefaultPlaybackBtn');
-
-    const initBufferSet = document.getElementById('initBufferSet');
-    const stableBufferSet = document.getElementById('stableBufferSet');
-    const minBitrateSet = document.getElementById('minBitrateSet');
-    const maxBitrateSet = document.getElementById('maxBitrateSet');
-
-    const initBufferL = document.getElementById('initBuffer');
-    const stableBufferL = document.getElementById('stableBuffer');
-    const minBitrateL = document.getElementById('minBitrate');
-    const maxBitrateL = document.getElementById('maxBitrate');
-
-    dbtn.addEventListener('click', event => {
-      player.reset();
-      player = init('default');
-    });
-
-    lbtn.addEventListener('click', event => {
-      player.reset();
-      player = init('lowest');
-    });
-
-    defaultPlaybackBtn.addEventListener('click', event => {
-      player.updateSettings({
-        'streaming':{
-          'stableBufferTime': 12,
-          'bufferTimeAtTopQuality': 30,
-          'abr':{
-            'minBitrate':{
-              'video': -1
-            },
-            'maxBitrate':{
-              'video': -1
-            }
-          }
-        }
-      });
-      initBufferL.innerText = '12 s';
-      stableBufferL.innerText = '30 s';
-      minBitrateL.innerText = '-1 Kbps';
-      maxBitrateL.innerText = '-1 Kbps';
-
-      initBufferSet.value = 12;
-      stableBufferSet.value = 30;
-      minBitrateSet.value = -1;
-      maxBitrateSet.value = -1;
-    });
-
-    initBufferSet.addEventListener('change', event => {
-      let initBuffer = parseInt(initBufferSet.value, 10);
-      player.updateSettings({
-        'streaming':{
-          'stableBufferTime': initBuffer
-        }
-      });
-      initBufferL.innerText = initBuffer + ' s';
-    });
-
-    stableBufferSet.addEventListener('change', event => {
-      let stableBuffer = parseInt(stableBufferSet.value, 10);
-      player.updateSettings({
-        'streaming':{
-          'bufferTimeAtTopQuality': stableBuffer
-        }
-      });
-      stableBufferL.innerText = stableBuffer + ' s';
-    });
-
-    minBitrateSet.addEventListener('change', event => {
-      let minBitrate = parseInt(minBitrateSet.value, 10);
-      player.updateSettings({
-        'streaming':{
-          'abr':{
-            'minBitrate':{
-              'video': minBitrate
-            }
-          }
-        }
-      });
-      minBitrateL.innerText = minBitrate + ' Kbps';
-    }); 
-
-    maxBitrateSet.addEventListener('change', event => {
-      let maxBitrate = parseInt(maxBitrateSet.value, 10);
-      player.updateSettings({
-        'streaming':{
-          'abr':{
-            'maxBitrate':{
-              'video': maxBitrate
-            }
-          }
-        }
-      });
-      maxBitrateL.innerText = maxBitrate + ' Kbps';
-    });
-
-  </script>
 </body>
 
 </html>
