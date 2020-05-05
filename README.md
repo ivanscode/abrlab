@@ -21,7 +21,9 @@ Currently, this project is a work-in-progress, but here is what's working:
 * [Web UI](https://github.com/ivanscode/abrlab#web-ui)
     * [Setup](https://github.com/ivanscode/abrlab#setup)
     * [Running](https://github.com/ivanscode/abrlab#running)
-* [How to use](https://github.com/ivanscode/abrlab#how-to-use)
+* [Implementing Custom Rules](https://github.com/ivanscode/abrlab#implementing-custom-rules)
+    * [Creating](https://github.com/ivanscode/abrlab#creating)
+    * [Adding to Demo](https://github.com/ivanscode/abrlab#adding-to-demo)
 
 ## Dependencies
 To convert files to DASH format, I have included a converter script that uses:
@@ -34,6 +36,7 @@ Python is used for the converter and hosting the demo webpage. However, any ligh
 Dash.js' minified file is included
 
 Additionally, the webiste uses Bootstrap for styling using its CDN
+The js portion is included since Popper.js was needed
 
 ### Quirks
 The converter is setup to be used on Windows, but if you are running Linux, the only necessary change in the converter script should be the file output format as Windows uses `dir\file` instead of `dir/file`.
@@ -71,8 +74,30 @@ For my purposes, I used Python's own webserver, `http.server` (Python 3.6)
 Run `python -m http.server` or `python -m http.server [port]` if you already have something running on the default port 8000.
 The command should be run in the `server` directory.
 
-## How to use
-The demo page has a very simple layout. Any changeable parameters will be in the right function column.
+## Implementing Custom Rules
+The process could be considered a little difficult because the documentation for Dash.js has some discrepancies, but generally the flow is easy to understand.
+At the end of a segment/fragment, the player calls `getMaxIndex` of a given rule it's using. Following whatever implemented rule logic, the function returns a `SwitchRequest` if the rule logic deems it necessary.
+The rule class is built independently and can be easily added to the player logic.
 
-Implementing addditional custom algorithms is not too difficult. Take a look at `LowestBitrateRule.js` in the server directory as an example. Its implementation required an additional if statement to select it once its button was pressed. A more streamlined
-process is in the works
+### Creating
+The demo includes a couple of pre-made rules provided by Dash.js. The simplest rule is the `LowestBitrateRule` which works exactly how it sounds, so I would recommend taking a look at that file to familiarize yourself with the rule class.
+In general, the process is simple:
+* Define rule class with `setup()` and `getMaxIndex()` functions defined the latter being the more important decision function.
+* Pull whatever metrics from the player using its various "Models"
+* Implement custom logic using above data
+    * The logic should spit out an index of the "bitrate level" with 0 being the lowest bitrate up to n depending on how many different bitrate videos were provided
+* Create a switch request and return it
+**Note:**The priority flag in the SwitchRequest didn't seem to do much, so for faster bitrate switching, turn on fastABR in the demo (WIP)
+
+### Adding to Demo
+I tried to use as little external libraries as possible (within reason) to simplify the project, but it's always a double-edged sword.
+That being said, adding the new rule to the demo is fairly simple:
+1. Add GUI elements
+    * Add buttons to ABR block - copy-paste existing ones and change their ID
+2. Add GUI listening logic
+    * In main.js, there is already examples provided - copy-paste and change IDs
+3. Add condition to player's init method
+    * A parameter gets passed into `init()` where additional logic is required to switch between different rules
+    * The function for rule switching already exists, so it's a matter of adding the new option
+
+Obviously, if you do not want to bother with the buttons, simply force the player to switch to your rule by skipping straight to step 3

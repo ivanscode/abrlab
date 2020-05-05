@@ -1,5 +1,3 @@
-let zeroTime = new Date().getTime();
-
 function init(rule) {
     //Video to use
     var video,
@@ -12,8 +10,10 @@ function init(rule) {
     //Switching between ABR rules
     if (rule == 'default') {
         setDefaultRules(player);
-    } else {
+    } else if(rule == 'lowest') { //Add custom rules here
         setCustomRule(player, 'LowestBitrateRule', LowestBitrateRule);
+    } else if(rule == 'dr'){
+        setCustomRule(player, 'DownloadRatioRule', DownloadRatioRule);
     }
 
     //Initialize after. Bugged otherwise
@@ -62,58 +62,6 @@ function init(rule) {
     return player;
 }
 
-function addData(chart, data) {
-    chart.data.datasets.forEach((dataset) => {
-        dataset.data.push(data);
-    });
-    chart.update();
-}
-
-function initChart() {
-    let ctx = document.getElementById('infoChart');
-    let infoChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Quality',
-                steppedLine: true,
-                borderColor: 'rgba(0,0,220,1)',
-                pointBackgroundColor: 'rgba(0,0,220,1)',
-                data: [{x: 0, y: 0}]
-            }]
-        }
-    });
-    infoChart.options = {
-        responsive: true,
-        title: {
-            display: true,
-            text: 'Quality'
-        },
-        scales: {
-            xAxes: [{
-                display: true,
-                type: 'linear',
-                position: 'bottom',
-                showLine: true,
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 5
-                }
-            }],
-            yAxes: [{
-                display: true,
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 5
-                }
-            }]
-        }
-    };
-    infoChart.update();
-
-    return infoChart;
-}
-
 function setDefaultRules(player) {
     player.updateSettings({
         'streaming': {
@@ -136,24 +84,20 @@ function setCustomRule(player, name, src) {
         }
     });
 
-    console.log('lowbitrated');
     document.getElementById('currentAlgorithm').innerText = name;
     player.addABRCustomRule('qualitySwitchRules', name, src);
 }
 
-function refresh(){
-    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function () {
-        let diff = (new Date().getTime() - zeroTime) / 1000;
-        addData(infoChart, { x: diff, y: player.getQualityFor('video')});
-    });
-}
-
 var player = init('default');
-let infoChart = initChart();
-refresh();
+let infoChart = new Graph();
+infoChart.refreshInstance(player);
+let fastSwitch = false;
 
+//Grab ABR rule buttons here
 const dbtn = document.getElementById('setDefaultBtn');
 const lbtn = document.getElementById('setLowestBtn');
+const drbtn = document.getElementById('setDRBtn');
+const fabtn = document.getElementById('setFastSwitch');
 const defaultPlaybackBtn = document.getElementById('setDefaultPlaybackBtn');
 
 const initBufferSet = document.getElementById('initBufferSet');
@@ -166,16 +110,49 @@ const stableBufferL = document.getElementById('stableBuffer');
 const minBitrateL = document.getElementById('minBitrate');
 const maxBitrateL = document.getElementById('maxBitrate');
 
+const gSetQuality = document.getElementById('gSetQuality');
+const gSetBuffer = document.getElementById('gSetBuffer');
+const gClear = document.getElementById('gClear');
+
+const playerl = document.getElementById('player-l');
+const playerm = document.getElementById('player-m');
+const players = document.getElementById('player-s');
+
+
+//Add click event listeners to ABR rule buttons here
 dbtn.addEventListener('click', event => {
-    player.reset();
-    player = init('default');
-    refresh();
+    player.reset(); //Necessary to avoid bugs with the player
+    player = init('default'); //Reinitialize player with new rule
+    infoChart.refreshInstance(player); //Reinitialize any trackers in graph.js
 });
 
 lbtn.addEventListener('click', event => {
     player.reset();
     player = init('lowest');
-    refresh();
+    infoChart.refreshInstance(player);
+});
+
+drbtn.addEventListener('click', event => {
+    player.reset();
+    player = init('dr');
+    infoChart.refreshInstance(player);
+});
+
+fabtn.addEventListener('click', event => {
+    if(!fastSwitch){
+        fastSwitch = true;
+        fabtn.classList.add('btn-primary');
+        fabtn.classList.remove('btn-secondary');
+    }else{
+        fastSwitch = false;
+        fabtn.classList.add('btn-secondary');
+        fabtn.classList.remove('btn-primary');
+    }
+    player.updateSettings({
+        'streaming':{
+            'fastSwitchEnabled': fastSwitch
+        }
+    });
 });
 
 defaultPlaybackBtn.addEventListener('click', event => {
@@ -250,4 +227,31 @@ maxBitrateSet.addEventListener('change', event => {
         }
     });
     maxBitrateL.innerText = maxBitrate + ' Kbps';
+});
+
+gSetQuality.addEventListener('click', event => {
+    infoChart.setMode('QUALITY');
+});
+
+gSetBuffer.addEventListener('click', event => {
+    infoChart.setMode('BUFFER_SIZE');
+});
+
+gClear.addEventListener('click', event => {
+    infoChart.clearData();
+});
+
+playerl.addEventListener('click', event => {
+    document.querySelector('video').style.width = '1280px';
+    document.querySelector('video').style.height = '720px';
+});
+
+playerm.addEventListener('click', event => {
+    document.querySelector('video').style.width = '854px';
+    document.querySelector('video').style.height = '480px';
+});
+
+players.addEventListener('click', event => {
+    document.querySelector('video').style.width = '640px';
+    document.querySelector('video').style.height = '360px';
 });

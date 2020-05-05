@@ -3,17 +3,11 @@
 
 <head>
   <title>SlowTube</title>
-  <style>
-    video {
-      width: 1280px;
-      height: 720px;
-    }
-  </style>
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
     crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="bootstrap/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
 </head>
@@ -36,6 +30,24 @@
           <div>Stable Buffer: <span id="stableBuffer">30 s</span></div>
           <div>Minimum Bitrate: <span id="minBitrate">-1 Kbps</span></div>
           <div>Maximum Bitrate: <span id="maxBitrate">-1 Kbps</span></div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Player</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Settings</h6>
+          <div class="dropdown">
+            <button class="btn btn-secondary btn-block dropdown-toggle" type="button" id="windowSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Player Size
+            </button>
+            <div class="dropdown-menu btn-block" style="text-align: center;" aria-labelledby="windowSelect">
+              <a id="player-l" class="dropdown-item btn">1280x720</a>
+              <div class="dropdown-divider"></div>
+              <a id="player-m" class="dropdown-item btn">854x480</a>
+              <div class="dropdown-divider"></div>
+              <a id="player-s" class="dropdown-item btn">640x360</a>
+            </div>
+          </div>
         </div>
       </div>
       <div class="card mt-2">
@@ -64,7 +76,7 @@
 
 
     <div class="col-sm-6" style="text-align: center;">
-      <video id="videoPlayer" controls></video>
+      <video id="videoPlayer" style="width: 1280px; height: 720px;" controls></video>
 
       <canvas id="infoChart" width="100%" height="40vh"></canvas>   
     </div>
@@ -75,6 +87,8 @@
         <div class="card-body">
           <h5 class="card-title">ABR</h5>
           <h6 class="card-subtitle mb-2 text-muted">Set ABR rules here</h6>
+
+          <!--Add buttons for switching ABR rules here-->
           <div style="margin-bottom: 1rem;">
             <button id="setDefaultBtn" type="button" class="btn btn-secondary btn-block">Deafult ABR</button>
           </div>
@@ -82,21 +96,13 @@
             <button id="setLowestBtn" type="button" class="btn btn-secondary btn-block">LowestBitrate</button>
           </div>
           <div style="margin-bottom: 1rem;">
-            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
-          </div>
-          <h6 class="card-subtitle mb-2 text-muted">Additional Tweaks</h6>
-          <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle btn-block disabled" type="button" id="windowSelect"
-              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Player Size (Can be set in main.js for now)
-            </button>
-            <div class="dropdown-menu" aria-labelledby="windowSelect">
-              <a class="dropdown-item">1280x720</a>
-              <a class="dropdown-item">854x480</a>
-              <a class="dropdown-item">640x360</a>
-            </div>
-          </div>
+            <button id="setDRBtn" type="button" class="btn btn-secondary btn-block">DownloadRatio</button>
+          </div>    
 
+          <h6 class="card-subtitle mb-2 text-muted">Addtional Settings</h6>
+          <div style="margin-bottom: 1rem;">
+            <button id="setFastSwitch" type="button" class="btn btn-secondary btn-block">Fast ABR Switch</button>
+          </div>
         </div>
       </div>
       <div class="card mt-2">
@@ -121,13 +127,14 @@
           <h5 class="card-title">Graphing</h5>
           <h6 class="card-subtitle mb-2 text-muted">Modes</h6>
           <div style="margin-bottom: 1rem;">
-            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+            <button id="gSetQuality" type="button" class="btn btn-secondary btn-block">Quality</button>
           </div>
           <div style="margin-bottom: 1rem;">
-            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+            <button id="gSetBuffer" type="button" class="btn btn-secondary btn-block">Buffer Size</button>
           </div>
+          <h6 class="card-subtitle mb-2 text-muted">Other Functions</h6>
           <div style="margin-bottom: 1rem;">
-            <button type="button" class="btn btn-secondary btn-block disabled">N/A</button>
+            <button id="gClear" type="button" class="btn btn-block btn-outline-warning">Clear Graph</button>
           </div>
         </div>
       </div>
@@ -137,7 +144,9 @@
 
 
   <script src="dash.all.min.js"></script>
-  <script src="LowestBitrateRule.js"></script>
+  <script src="ABRules/LowestBitrateRule.js"></script>
+  <script src="ABRules/DownloadRatioRule.js"></script>
+  <script src="graph.js"></script>
   <script src="main.js"></script>
 
 </body>
