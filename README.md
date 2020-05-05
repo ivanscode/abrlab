@@ -87,7 +87,8 @@ In general, the process is simple:
 * Implement custom logic using above data
     * The logic should spit out an index of the "bitrate level" with 0 being the lowest bitrate up to n depending on how many different bitrate videos were provided
 * Create a switch request and return it
-**Note:**The priority flag in the SwitchRequest didn't seem to do much, so for faster bitrate switching, turn on fastABR in the demo (WIP)
+
+**Note:** The priority flag in the SwitchRequest didn't seem to do much, so for faster bitrate switching, turn on fastABR in the demo (WIP)
 
 ### Adding to Demo
 I tried to use as little external libraries as possible (within reason) to simplify the project, but it's always a double-edged sword.
