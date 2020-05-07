@@ -13,11 +13,24 @@ function init(rule) {
     } else if(rule == 'lowest') { //Add custom rules here
         setCustomRule(player, 'LowestBitrateRule', LowestBitrateRule);
     } else if(rule == 'dr'){
+        console.log('sup');
         setCustomRule(player, 'DownloadRatioRule', DownloadRatioRule);
+    } else if(rule == 'party'){
+        setCustomRule(player, 'PartyRule', PartyRule);
     }
 
     //Initialize after. Bugged otherwise
     player.initialize(video, url, true);
+
+    player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function(){
+        let ares = document.getElementById('ares');
+        let bitrates = player.getActiveStream().getBitrateListFor('video');
+        let tstr = '';
+        for(var i = 0; i < bitrates.length; i++){
+            tstr += `<span class='badge badge-pill badge-light'>${bitrates[i].bitrate} (${bitrates[i].width}x${bitrates[i].height})</span>`;
+        }
+        ares.innerHTML = tstr;
+    });
 
     //On end
     player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
@@ -97,6 +110,7 @@ let fastSwitch = false;
 const dbtn = document.getElementById('setDefaultBtn');
 const lbtn = document.getElementById('setLowestBtn');
 const drbtn = document.getElementById('setDRBtn');
+const partybtn = document.getElementById('setPartyBtn');
 const fabtn = document.getElementById('setFastSwitch');
 const defaultPlaybackBtn = document.getElementById('setDefaultPlaybackBtn');
 
@@ -104,15 +118,20 @@ const initBufferSet = document.getElementById('initBufferSet');
 const stableBufferSet = document.getElementById('stableBufferSet');
 const minBitrateSet = document.getElementById('minBitrateSet');
 const maxBitrateSet = document.getElementById('maxBitrateSet');
+const bufferPruneSet = document.getElementById('bufferPruneSet');
+const bufferAheadSet = document.getElementById('bufferAheadSet');
 
 const initBufferL = document.getElementById('initBuffer');
 const stableBufferL = document.getElementById('stableBuffer');
 const minBitrateL = document.getElementById('minBitrate');
 const maxBitrateL = document.getElementById('maxBitrate');
+const buffPrune = document.getElementById('buffPrune');
+const aheadBuff = document.getElementById('aheadBuff');
 
 const gSetQuality = document.getElementById('gSetQuality');
 const gSetBuffer = document.getElementById('gSetBuffer');
 const gClear = document.getElementById('gClear');
+const gCsv = document.getElementById('gCsv');
 
 const playerl = document.getElementById('player-l');
 const playerm = document.getElementById('player-m');
@@ -138,7 +157,14 @@ drbtn.addEventListener('click', event => {
     infoChart.refreshInstance(player);
 });
 
+partybtn.addEventListener('click', event => {
+    player.reset();
+    player = init('party');
+    infoChart.refreshInstance(player);
+});
+
 fabtn.addEventListener('click', event => {
+    console.log(player.getActiveStream());
     if(!fastSwitch){
         fastSwitch = true;
         fabtn.classList.add('btn-primary');
@@ -160,6 +186,8 @@ defaultPlaybackBtn.addEventListener('click', event => {
         'streaming': {
             'stableBufferTime': 12,
             'bufferTimeAtTopQuality': 30,
+            'bufferAheadToKeep': 80,
+            'bufferPruningInterval': 10,
             'abr': {
                 'minBitrate': {
                     'video': -1
@@ -170,15 +198,20 @@ defaultPlaybackBtn.addEventListener('click', event => {
             }
         }
     });
-    initBufferL.innerText = '12 s';
-    stableBufferL.innerText = '30 s';
-    minBitrateL.innerText = '-1 Kbps';
-    maxBitrateL.innerText = '-1 Kbps';
+    initBufferL.innerText = '12';
+    stableBufferL.innerText = '30';
+    minBitrateL.innerText = '-1';
+    maxBitrateL.innerText = '-1';
+    buffPrune.innerText = '10';
+    aheadBuff.innerText = '80';
 
     initBufferSet.value = 12;
     stableBufferSet.value = 30;
     minBitrateSet.value = -1;
     maxBitrateSet.value = -1;
+    bufferPruneSet.value = 10;
+    bufferAheadSet.value = 80;
+
 });
 
 initBufferSet.addEventListener('change', event => {
@@ -188,7 +221,7 @@ initBufferSet.addEventListener('change', event => {
             'stableBufferTime': initBuffer
         }
     });
-    initBufferL.innerText = initBuffer + ' s';
+    initBufferL.innerText = initBuffer;
 });
 
 stableBufferSet.addEventListener('change', event => {
@@ -198,7 +231,7 @@ stableBufferSet.addEventListener('change', event => {
             'bufferTimeAtTopQuality': stableBuffer
         }
     });
-    stableBufferL.innerText = stableBuffer + ' s';
+    stableBufferL.innerText = stableBuffer;
 });
 
 minBitrateSet.addEventListener('change', event => {
@@ -212,7 +245,7 @@ minBitrateSet.addEventListener('change', event => {
             }
         }
     });
-    minBitrateL.innerText = minBitrate + ' Kbps';
+    minBitrateL.innerText = minBitrate;
 });
 
 maxBitrateSet.addEventListener('change', event => {
@@ -226,7 +259,27 @@ maxBitrateSet.addEventListener('change', event => {
             }
         }
     });
-    maxBitrateL.innerText = maxBitrate + ' Kbps';
+    maxBitrateL.innerText = maxBitrate;
+});
+
+bufferPruneSet.addEventListener('change', event => {
+    let prune = parseInt(bufferPruneSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'bufferPruningInterval': prune
+        }
+    });
+    buffPrune.innerText = prune;
+});
+
+bufferAheadSet.addEventListener('change', event => {
+    let ahead = parseInt(bufferAheadSet.value, 10);
+    player.updateSettings({
+        'streaming': {
+            'bufferAheadToKeep': ahead
+        }
+    });
+    aheadBuff.innerText = ahead;
 });
 
 gSetQuality.addEventListener('click', event => {
@@ -240,6 +293,11 @@ gSetBuffer.addEventListener('click', event => {
 gClear.addEventListener('click', event => {
     infoChart.clearData();
 });
+
+gCsv.addEventListener('click', event => {
+    infoChart.toCSV();
+});
+
 
 playerl.addEventListener('click', event => {
     document.querySelector('video').style.width = '1280px';

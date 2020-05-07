@@ -21,6 +21,8 @@ Currently, this project is a work-in-progress, but here is what's working:
 * [Web UI](https://github.com/ivanscode/abrlab#web-ui)
     * [Setup](https://github.com/ivanscode/abrlab#setup)
     * [Running](https://github.com/ivanscode/abrlab#running)
+    * [Graphing](https://github.com/ivanscode/abrlab#graphing)
+* [Issues](https://github.com/ivanscode/abrlab#issues)
 * [Implementing Custom Rules](https://github.com/ivanscode/abrlab#implementing-custom-rules)
     * [Creating](https://github.com/ivanscode/abrlab#creating)
     * [Adding to Demo](https://github.com/ivanscode/abrlab#adding-to-demo)
@@ -58,7 +60,7 @@ ffmpeg -i [input].mp4 -an -c:v libx264 -x264opts keyint=[FPS]:min-keyint=[FPS]:n
 
 Finally, use mp4box to encode to dash:
 ```console
-mp4box -dash 1000 -rap -frag-rap -profile onDemand -out [output].mpd [input1].mp4 [input2].mp4 [inputn].mp4 [input-AUDIO].mp4
+mp4box -dash 1000 -rap -frag-rap -profile "dashavc264:live" -out [output].mpd [input1].mp4 [input2].mp4 [inputn].mp4 [input-AUDIO].mp4
 ```
 
 Additionally, the converter can only convert "standard" formats of videos correctly. It looks for 16:9 standard resultions defined in the `resolutions` array, so if the video's original resolution
@@ -73,6 +75,29 @@ For my purposes, I used Python's own webserver, `http.server` (Python 3.6)
 ### Running
 Run `python -m http.server` or `python -m http.server [port]` if you already have something running on the default port 8000.
 The command should be run in the `server` directory.
+
+### Graphing
+[Chart.js](https://www.chartjs.org/) is used to visualize whatever data collected. 
+
+Currently, these are the metrics that are available to be graphed:
+* Quality
+* Seconds Stored in Buffer
+
+They are all tracked over time in seconds with some quirks in-between.
+
+Quality is tracked on every `SwitchRequest` instead of over some interval and is represented by the integer range 0-n where n depends on the available bitrate streams (n+1) for a given video.
+For example, a video converted using the included converter that was originally 1080p, would be converted into 5 different bitrate videos, so n=4
+
+Seconds Stored in Buffer are tracked by having a `setInterval()` set for .5 seconds update the graph. Note however, that the update does not stop on video pause as that would have complicated the code unnecessarily for the short dev period.
+If the video needs to be paused or for some other other reason you would like a clean graph, `Clear Graph` button was made as a stop-gap solution and simply clears the graph of all data points
+
+In addition to the graphing functionality, you can save the accumulated data displayed on the graph to a CSV file.
+
+## Issues
+For some reason, the player refuses to limit the buffer size in certain cases. For one of the videos tested, the bitrate needed to be lowered below a certain threshold to force the buffer size below its limit.
+Additionally, the buffer and quality can be instantly changed by seeking to a different part of a video even if that part has been buffered.
+
+In the lmited time of this project's development, I was unable to find a workaround for either of these issues.
 
 ## Implementing Custom Rules
 The process could be considered a little difficult because the documentation for Dash.js has some discrepancies, but generally the flow is easy to understand.
@@ -95,6 +120,7 @@ I tried to use as little external libraries as possible (within reason) to simpl
 That being said, adding the new rule to the demo is fairly simple:
 1. Add GUI elements
     * Add buttons to ABR block - copy-paste existing ones and change their ID
+    * Add rule script source to index
 2. Add GUI listening logic
     * In main.js, there is already examples provided - copy-paste and change IDs
 3. Add condition to player's init method

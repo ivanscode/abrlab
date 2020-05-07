@@ -10,10 +10,29 @@ class Graph{
         this.mode = QUALITY;
         this.chart = new Chart(ctx, {type: 'line'});
         this.initQuality();
+
+        this.data = [];
         
     }
 
+    toCSV(){
+        let csv = "data:text/csv;charset=utf-8,";
+
+        this.data.forEach(function(r) {
+            let row = r.join(",");
+            csv += row + "\r\n";
+        });
+
+        let encodedUri = encodeURI(csv);
+        let link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'data.csv');
+        document.body.appendChild(link);
+        link.click();
+    }
+
     initQuality(){
+        this.clearData();
         if(this.mode == BUFFER_SIZE){
             clearInterval(this.bufferInterval);
         }
@@ -57,6 +76,7 @@ class Graph{
     }
 
     initBuffer(){
+        this.clearData();
         this.mode = BUFFER_SIZE;
         this.chart.data = {
             datasets: [{
@@ -105,6 +125,7 @@ class Graph{
             dataset.data.push(data);
         });
         this.chart.update();
+        this.data.push([`${data.x}`, `${data.y}`]);
     }
     
     clearData(){
@@ -113,13 +134,27 @@ class Graph{
         });
         this.chart.update();
         zeroTime = new Date().getTime();
+        this.data = [];
     }
 
     refreshInstance(player){
         if(this.mode == QUALITY){
             player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function () {
                 let diff = (new Date().getTime() - zeroTime) / 1000;
-                this.addData({ x: diff, y: player.getQualityFor('video')});
+                let quality = player.getQualityFor('video');
+                this.addData({ x: diff, y: quality});
+
+                let cbr = document.getElementById('cbr');
+                let cres = document.getElementById('cres');
+
+                
+                let bitrates = player.getActiveStream().getBitrateListFor('video');
+                let bitrate = bitrates[quality].bitrate;
+                let width = bitrates[quality].width;
+                let height = bitrates[quality].height;
+
+                cbr.innerText = `${bitrate} bps`;
+                cres.innerText = `${width}x${height}`;
             }.bind(this));
         }
     }

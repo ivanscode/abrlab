@@ -29,20 +29,20 @@ class Cmd:
     DASH = 'dash'
     AUDIOCOPY = ' -c:a copy -vn'
     CODECS = ' -an -c:v libx264 -x264opts'
-    DASHENC = ' -dash 1000 -rap -frag-rap -profile onDemand -out'
+    DASHENC = ' -dash 1000 -rap -frag-rap -profile "dashavc264:live" -out'
 
     def __init__(self, video, action):
         self.action = action
+        self.path = video.path
+        self.name = video.name
         self.setResolution(video.resolution[0], video.resolution[1])
         self.setFramerate(video.framerate)
         self.input = ' -i {}'.format(video.fin)
         self.verbose = ''
-        self.path = video.path
-        self.name = video.name
-        self.setOutput(None)
 
     def setResolution(self, w, h):
         self.resolution = ' -vf scale={}:{}'.format(w, h)
+        self.setOutput(None)
 
     def setFramerate(self, fr):
         self.framerate = ' keyint={}:min-keyint={}:no-scenecut'.format(fr, fr)

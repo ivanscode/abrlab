@@ -19,17 +19,27 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Information</h5>
+
           <h6 class="card-subtitle mb-2 text-muted">Recorded and calculated metrics</h6>
           <div>Current Buffer: <span id="bufferLevel"></span></div>
           <div>Reported Bitrate: <span id="reportedBitrate"></span></div>
           <div>Calculated Bitrate: <span id="calculatedBitrate"></span></div>
+
           <h6 class="card-subtitle mb-2 mt-2 text-muted">ABR settings</h6>
           <div>Current Algorithm: <span id="currentAlgorithm"></span></div>
+
+          <h6 class="card-subtitle mb-2 mt-2 text-muted">Video Metadata</h6>
+          <div>Bitrate: <span id="cbr"></span></div>
+          <div>Resolution: <span id="cres"></span></div>
+          <div>Availble bitrates: <span id="ares"></span></div>
+
           <h6 class="card-subtitle mb-2 mt-2 text-muted">Playback settings</h6>
-          <div>Initial Buffer: <span id="initBuffer">12 s</span></div>
-          <div>Stable Buffer: <span id="stableBuffer">30 s</span></div>
-          <div>Minimum Bitrate: <span id="minBitrate">-1 Kbps</span></div>
-          <div>Maximum Bitrate: <span id="maxBitrate">-1 Kbps</span></div>
+          <div>Initial Buffer: <span id="initBuffer">12</span> s</div>
+          <div>Stable Buffer: <span id="stableBuffer">30</span> s</div>
+          <div>Minimum Bitrate: <span id="minBitrate">-1</span> Kbps</div>
+          <div>Maximum Bitrate: <span id="maxBitrate">-1</span> Kbps</div>
+          <div>Minimum Bitrate: <span id="buffPrune">10</span> s</div>
+          <div>Maximum Bitrate: <span id="aheadBuff">80</span> s</div>
         </div>
       </div>
       <div class="card mt-2">
@@ -63,11 +73,11 @@
             <input type="number" class="form-control" id="stableBufferSet" value="30">
           </div>
           <div>
-            <label for="stableBufferSet">Buffer Pruning Interval (s)</label>
+            <label for="bufferPruneSet">Buffer Pruning Interval (s)</label>
             <input type="number" class="form-control" id="bufferPruneSet" value="10">
           </div>
           <div>
-            <label for="stableBufferSet">Max Buffer Size (s) (Ahead of the current timestamp)</label>
+            <label for="bufferAheadSet">Max Buffer Size (s) (Ahead of the current timestamp)</label>
             <input type="number" class="form-control" id="bufferAheadSet" value="80">
           </div>
         </div>
@@ -97,7 +107,10 @@
           </div>
           <div style="margin-bottom: 1rem;">
             <button id="setDRBtn" type="button" class="btn btn-secondary btn-block">DownloadRatio</button>
-          </div>    
+          </div>   
+          <div style="margin-bottom: 1rem;">
+            <button id="setPartyBtn" type="button" class="btn btn-secondary btn-block">Party</button>
+          </div> 
 
           <h6 class="card-subtitle mb-2 text-muted">Addtional Settings</h6>
           <div style="margin-bottom: 1rem;">
@@ -127,12 +140,18 @@
           <h5 class="card-title">Graphing</h5>
           <h6 class="card-subtitle mb-2 text-muted">Modes</h6>
           <div style="margin-bottom: 1rem;">
+            <label for="gSetQuality">Tracks "quality" of stream (0-n depending on available bitrates)<br> <strong>Note: </strong>new points are added on SwitchRequests only. More info can be found in the README</label>
             <button id="gSetQuality" type="button" class="btn btn-secondary btn-block">Quality</button>
           </div>
+          <div class="dropdown-divider"></div>
           <div style="margin-bottom: 1rem;">
+            <label for="gSetBuffer">Tracks buffer size in seconds<br><strong>Note: </strong>does not stop with video pause (Use clear graph as needed)</label>
             <button id="gSetBuffer" type="button" class="btn btn-secondary btn-block">Buffer Size</button>
           </div>
           <h6 class="card-subtitle mb-2 text-muted">Other Functions</h6>
+          <div style="margin-bottom: 1rem;">
+            <button id="gCsv" type="button" class="btn btn-block btn-secondary">Save Data (CSV)</button>
+          </div>
           <div style="margin-bottom: 1rem;">
             <button id="gClear" type="button" class="btn btn-block btn-outline-warning">Clear Graph</button>
           </div>
@@ -143,9 +162,11 @@
   </div>
 
 
+  <!--Add your rule sources here-->
   <script src="dash.all.min.js"></script>
   <script src="ABRules/LowestBitrateRule.js"></script>
   <script src="ABRules/DownloadRatioRule.js"></script>
+  <script src="ABRules/PartyRule.js"></script>
   <script src="graph.js"></script>
   <script src="main.js"></script>
 
