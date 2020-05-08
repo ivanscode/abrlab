@@ -26,6 +26,12 @@ Currently, this project is a work-in-progress, but here is what's working:
 * [Implementing Custom Rules](https://github.com/ivanscode/abrlab#implementing-custom-rules)
     * [Creating](https://github.com/ivanscode/abrlab#creating)
     * [Adding to Demo](https://github.com/ivanscode/abrlab#adding-to-demo)
+* [Extended Documentation](https://github.com/ivanscode/abrlab#extended-documentation)
+    * [DashManifest]()
+    * [DashMetrics]()
+    * [MetricsModel]()
+    * [StreamConstroller]()
+    * [Other]()
 
 ## Dependencies
 To convert files to DASH format, I have included a converter script that uses:
@@ -128,3 +134,118 @@ That being said, adding the new rule to the demo is fairly simple:
     * The function for rule switching already exists, so it's a matter of adding the new option
 
 Obviously, if you do not want to bother with the buttons, simply force the player to switch to your rule by skipping straight to step 3
+
+
+## Extended Documentaion
+
+### DashManifest
+This information seems to be connected to MetricsModel as well as the info in activeStream (manifestInfo)
+#### getAvailabilityStartTime()
+#### getBandwidth()
+#### getBitrateListForAdaptation()
+#### getContentProtectionData()
+#### getDuration()
+#### getLocation()
+#### getManifestUpdatePeriod()
+#### getMimeType()
+#### getMpd()
+#### getRegularPeriods()
+#### getRepresentationCount()
+
+### DashMetrics
+Looking at Dash.js source code, it seems that these functions are redundant to Metrics
+#### getCurrentBufferLevel(mediaType)
+See MetricsModel
+#### getCurrentDroppedFrames(mediaType)
+See MetricsModel for the return array
+#### getCurrentHttpRequest(mediaType)
+* interval
+* range - fragment range
+* responsecode
+* trequest - getTime(), getDate(), ... timeRelatedFunction()
+    * When request was made
+* tresponse - getTime(), getDate(), ... timeRelatedFunction()
+    * When response was made
+* type
+* url
+* _tfinish - getTime(), getDate(), ... timeRelatedFunction()
+    * Download finished
+#### getCurrentManifestUpdate()
+Some of these values never seem to be used
+* availabilityStartTime
+* buffered
+* clientTimeOffset
+* currentTTime
+* fetchTime
+* latency
+* mediaType
+* representationInfo [{id, index, mediaType, startNumber}]
+* requestTime
+* streamInfo [{duration, id, index, start}]
+#### getCurrentRepresentationSwitch(mediaType)
+Same as SwitchRequest queue in MetricsModel
+#### getCurrentSchedulingInfo()
+Same as SchedulingInfo in MetricsModel
+#### getHttpRequests(mediaType)
+Same as HttpList in MetricsModel
+
+### MetricsModel
+This model only has one function of value while the rest serve internal purposes of Dash.js
+#### getMetricsFor(mediaType, someBoolean)
+Example usage can be seen in sample rule classes
+
+Returns an object
+* BufferLevel [{t, level}]
+* BufferState [{target, state}]
+* DroppedFrames [{t, droppedFrames}]
+* HttpList [{interval, trequest, tresponse, tcpid, type, url, range}]
+    * trequest and tresponse - getTime(), getDate(), ... timeRelatedFunction()
+* RepSwitchList [{t, to}]
+    * SwitchRequests' levels
+* RequestsQueue
+    * loadingRequests
+    * executedRequests [{action, availabilityEndTime, availabilityStartTime, bytesLoaded, bytesTotal, delayLoadingTime, duration, quality, range, startTime, mediaType, type}]
+        * mediaType (`'video'` / `'audio'`)
+        * type (`'MediaSegment'` / `'InitializationSegment'`)
+* SchedulingInfo [{mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state}]
+
+
+### StreamConstroller
+#### getActiveStreamInfo()
+* duration
+* id
+* index
+* isLast
+* manifestInfo {availableFrom, duration, isDynamic, loadedTime, minBufferTime}
+
+### Other
+
+#### rulesContext
+Returns an object with the following functions
+##### getAbrController()
+* getInitialBitrateFor(mediaType)
+* getQualityFor(mediaType) - bitrate index (0-n)
+* getThroughputHistory() couldn't get these functions to work
+    * getAverageLatency() - unknown
+    * getAverageThroughput() - unknown
+* getTopBitrateInfoFor(mediaType) {bitrate, width, height, mediaType, qualityIndex}
+* getTopQualityIndexFor(mediaType) - I have tried to understand this function for a while, but its name is deceptive
+* isPlayingAtTopQuality() - whether index is n-1 for n bitrates
+##### getDroppedFramesHistory()
+Returns the controller for dropped frames with the only useful function being
+
+getFrameHistory() which returns the same list as in getMetricsFor of the MetricsModel
+##### getMediaInfo()
+* bitrateList [{bandwidth, width, height, scanType}]
+* codec
+* mimeType
+* streamInfo {duration}
+* type
+##### getMediaType()
+Media type `video` or `audio`
+##### getStreamInfo()
+Same information as getMediaInfo which has more than this function
+##### getSwitchHistory()
+Returns the controller for SwitchRequests with the only useful function being
+
+getSwitchRequests() which returns the same list as in getMetricsFor  of the MetricsModel

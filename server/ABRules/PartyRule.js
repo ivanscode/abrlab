@@ -20,6 +20,7 @@ function PartyRuleClass() {
     let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
     let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
     let StreamController = factory.getSingletonFactoryByName('StreamController');
+    let DashManifestModel = factory.getSingletonFactoryByName('DashManifestModel');
     let context = this.context;
     let instance;
 
@@ -35,9 +36,12 @@ function PartyRuleClass() {
         let bitrates = rulesContext.getMediaInfo().bitrateList; //Fragment bitrates
         var metrics = metricsModel.getMetricsFor(mediaType, true); //General info
         let dashMetrics = DashMetrics(context).getInstance(); //More info
+        let streamController = StreamController(context).getInstance();
+        let dashManifest = DashManifestModel(context).getInstance();
+        let abr = rulesContext.getAbrController();
 
 
-        //Get max possible bitrate ~INDEX~ since SwitchRequest uses the index rather than the actual bitrate
+        //Get max possible bitrate ~INDEX~ since SwitchRequest uses the index rather than the actual bitrate    
         let top = bitrates.length;
 
         if(mediaType == 'video'){
@@ -65,4 +69,3 @@ function PartyRuleClass() {
 //These two are necessary as will be seen in main.js where the ABR rule switching happens
 PartyRuleClass.__dashjs_factory_name = 'PartyRule'; 
 PartyRule = dashjs.FactoryMaker.getClassFactory(PartyRuleClass);
-
