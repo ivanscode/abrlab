@@ -27,11 +27,11 @@ Currently, this project is a work-in-progress, but here is what's working:
     * [Creating](https://github.com/ivanscode/abrlab#creating)
     * [Adding to Demo](https://github.com/ivanscode/abrlab#adding-to-demo)
 * [Extended Documentation](https://github.com/ivanscode/abrlab#extended-documentation)
-    * [DashManifest]()
-    * [DashMetrics]()
-    * [MetricsModel]()
-    * [StreamConstroller]()
-    * [Other]()
+    * [DashManifest](https://github.com/ivanscode/abrlab#dashmanifest)
+    * [DashMetrics](https://github.com/ivanscode/abrlab#dashmetrics)
+    * [MetricsModel](https://github.com/ivanscode/abrlab#metricsmodel)
+    * [StreamConstroller](https://github.com/ivanscode/abrlab#streamcontroller)
+    * [Other](https://github.com/ivanscode/abrlab#other)
 
 ## Dependencies
 To convert files to DASH format, I have included a converter script that uses:
@@ -136,7 +136,7 @@ That being said, adding the new rule to the demo is fairly simple:
 Obviously, if you do not want to bother with the buttons, simply force the player to switch to your rule by skipping straight to step 3
 
 
-## Extended Documentaion
+## Extended Documentation
 
 ### DashManifest
 This information seems to be connected to MetricsModel as well as the info in activeStream (manifestInfo)
